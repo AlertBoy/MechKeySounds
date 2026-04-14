@@ -44,7 +44,16 @@ let volume = 1.0;
 let mouseSoundsEnabled = true;
 let currentProfile = 'blue';
 
-const SOUNDS_DIR = path.join(__dirname, 'resources', 'sounds');
+/**
+ * Packaged app keeps assets in app.asar; afplay and other CLI players need a real path.
+ * WAVs are listed in electron-builder.yml asarUnpack → app.asar.unpacked/resources/sounds
+ */
+function getSoundsDir() {
+  if (app.isPackaged) {
+    return path.join(process.resourcesPath, 'app.asar.unpacked', 'resources', 'sounds');
+  }
+  return path.join(__dirname, 'resources', 'sounds');
+}
 
 // uiohook-napi keycodes (cross-platform)
 // Heavy keys: space, enter, backspace, tab, delete
@@ -74,15 +83,17 @@ function getKeyCategory(keycode) {
 
 // Resolve WAV path with fallback chain
 function resolveSound(profile, variant) {
+  const base = getSoundsDir();
   const candidates = [
-    path.join(SOUNDS_DIR, profile, `${profile}_down_${variant}.wav`),
-    path.join(SOUNDS_DIR, 'blue', `blue_down_${variant}.wav`),
-    path.join(SOUNDS_DIR, 'blue', 'blue_down.wav'),
+    path.join(base, profile, `${profile}_down_${variant}.wav`),
+    path.join(base, 'blue', `blue_down_${variant}.wav`),
+    path.join(base, 'blue', 'blue_down.wav'),
   ];
   return candidates.find(p => fs.existsSync(p)) || null;
 }
 
 function getSoundPath(type, keycode) {
+  const base = getSoundsDir();
   if (type === 'down') {
     const cat = getKeyCategory(keycode);
     if (cat === 'heavy') {
@@ -93,17 +104,17 @@ function getSoundPath(type, keycode) {
       // Regular: alternate between soft/loud/normal for subtle variety
       const variants = ['', '_soft', '_loud'];
       const pick = variants[Math.floor(Math.random() * variants.length)];
-      const candidate = path.join(SOUNDS_DIR, currentProfile, `${currentProfile}_down${pick}.wav`);
+      const candidate = path.join(base, currentProfile, `${currentProfile}_down${pick}.wav`);
       if (pick !== '' && fs.existsSync(candidate)) return candidate;
-      return resolveSound(currentProfile, '') || path.join(SOUNDS_DIR, 'blue', 'blue_down.wav');
+      return resolveSound(currentProfile, '') || path.join(base, 'blue', 'blue_down.wav');
     }
   }
   // up / mouse
-  const candidate = path.join(SOUNDS_DIR, currentProfile, `${currentProfile}_${type}.wav`);
+  const candidate = path.join(base, currentProfile, `${currentProfile}_${type}.wav`);
   if (fs.existsSync(candidate)) return candidate;
-  const fallback = path.join(SOUNDS_DIR, 'blue', `blue_${type}.wav`);
+  const fallback = path.join(base, 'blue', `blue_${type}.wav`);
   if (fs.existsSync(fallback)) return fallback;
-  return path.join(SOUNDS_DIR, 'blue', 'blue_down.wav');
+  return path.join(base, 'blue', 'blue_down.wav');
 }
 
 // Track concurrent afplay processes per slot to prevent stacking

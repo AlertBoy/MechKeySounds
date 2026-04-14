@@ -3,3 +3,6 @@
 /dist
 .DS_Store
 *.log
+
+# Large trimmer source only (optional); small clips under blue/ etc. should be committed for releases
+resources/sounds/keyboard_sounds.wav

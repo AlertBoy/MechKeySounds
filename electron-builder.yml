@@ -13,10 +13,14 @@ files:
   - "!.github{,/**}"
   - "!**/*.md"
   - "!.gitignore"
- - "!**/.DS_Store"
+  - "!**/.DS_Store"
+  # Optional: omit huge trimmer source from installers (keep blue/*.wav etc.)
+  - "!resources/sounds/keyboard_sounds.wav"
 
 asarUnpack:
   - "**/*.node"
+  # External processes (afplay, etc.) cannot read paths inside app.asar — unpack WAVs to disk
+  - "resources/sounds/**/*.wav"
 
 # Upload installers to GitHub Releases when GH_TOKEN is set (e.g. in CI)
 publish:
