@@ -1,0 +1,33 @@
+{
+  "name": "mech-key-sounds",
+  "version": "1.0.0",
+  "description": "Mechanical keyboard sounds for your computer - cross-platform",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "rebuild": "electron-rebuild",
+    "build": "electron-builder",
+    "postinstall": "electron-rebuild"
+  },
+  "dependencies": {
+    "uiohook-napi": "^1.5.0"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0",
+    "@electron/rebuild": "^3.6.0"
+  },
+  "build": {
+    "appId": "com.mechkeysounds.app",
+    "productName": "MechKeySounds",
+    "mac": {
+      "category": "public.app-category.utilities"
+    },
+    "linux": {
+      "target": "AppImage"
+    },
+    "win": {
+      "target": "nsis"
+    }
+  }
+}

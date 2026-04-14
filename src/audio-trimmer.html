@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MechKeySounds - Audio Trimmer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      padding: 24px;
+      overflow-x: hidden;
+    }
+    h1 {
+      font-size: 20px;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 20px;
+    }
+    .waveform-container {
+      position: relative;
+      background: #0d0d1a;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      cursor: crosshair;
+      user-select: none;
+    }
+    canvas#waveform {
+      display: block;
+      width: 100%;
+      height: 120px;
+    }
+    .selection-overlay {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      background: rgba(74, 144, 217, 0.25);
+      border-left: 2px solid #4A90D9;
+      border-right: 2px solid #4A90D9;
+      pointer-events: none;
+    }
+    .time-ruler {
+      height: 24px;
+      background: #0d0d1a;
+      border-radius: 0 0 8px 8px;
+      position: relative;
+      margin-top: -1px;
+    }
+    .time-ruler canvas {
+      display: block;
+      width: 100%;
+      height: 24px;
+    }
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    button {
+      padding: 8px 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      background: rgba(255,255,255,0.06);
+      color: #ccc;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    button:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    button:active { transform: scale(0.97); }
+    button.primary {
+      background: #4A90D9;
+      border-color: #4A90D9;
+      color: #fff;
+    }
+    button.primary:hover { background: #3a7bc8; }
+    button.play-btn {
+      background: #2ecc71;
+      border-color: #2ecc71;
+      color: #fff;
+    }
+    button.play-btn:hover { background: #27ae60; }
+    button.stop-btn {
+      background: #e74c3c;
+      border-color: #e74c3c;
+      color: #fff;
+    }
+
+    .selection-info {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 8px;
+      font-size: 13px;
+    }
+    .selection-info span { color: #888; }
+    .selection-info .val { color: #4A90D9; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+    .save-section {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 16px;
+      padding: 16px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 8px;
+    }
+    .save-section label { font-size: 13px; color: #888; }
+    .save-section select, .save-section input[type="text"] {
+      padding: 6px 10px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      background: #1a1a2e;
+      color: #fff;
+      font-size: 13px;
+    }
+    .save-section select { min-width: 120px; }
+
+    .clips-list {
+      margin-top: 20px;
+    }
+    .clips-list h2 {
+      font-size: 15px;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+    .clip-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 6px;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+    .clip-item .clip-name { flex: 1; color: #ccc; }
+    .clip-item .clip-time { color: #888; font-variant-numeric: tabular-nums; }
+    .clip-item .clip-profile {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .clip-blue { background: rgba(74,144,217,0.2); color: #4A90D9; }
+    .clip-red { background: rgba(231,76,60,0.2); color: #E74C3C; }
+    .clip-brown { background: rgba(139,105,20,0.2); color: #D4A84B; }
+
+    .instructions {
+      margin-bottom: 20px;
+      padding: 12px 16px;
+      background: rgba(74,144,217,0.1);
+      border-radius: 8px;
+      border-left: 3px solid #4A90D9;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #aaa;
+    }
+    .instructions strong { color: #fff; }
+
+    #loadingOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+    #loadingOverlay .spinner {
+      font-size: 16px;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingOverlay">
+    <div class="spinner">Loading audio file...</div>
+  </div>
+
+  <h1>MechKeySounds Audio Trimmer</h1>
+  <div class="subtitle">Select audio segments from the keyboard sound test to use as switch profiles</div>
+
+  <div class="instructions">
+    <strong>How to use:</strong> Click and drag on the waveform to select a region. Use the buttons below to play the selection or save it as a switch sound. Each switch profile needs both a <strong>key down</strong> and <strong>key up</strong> sound.
+  </div>
+
+  <div class="waveform-container" id="waveformContainer">
+    <canvas id="waveform"></canvas>
+    <div class="selection-overlay" id="selectionOverlay" style="display:none;"></div>
+  </div>
+  <div class="time-ruler">
+    <canvas id="timeRuler"></canvas>
+  </div>
+
+  <div class="controls">
+    <button class="play-btn" id="playSelection">Play Selection</button>
+    <button class="stop-btn" id="stopPlay">Stop</button>
+    <button id="playAll">Play All</button>
+    <button id="zoomIn">Zoom In</button>
+    <button id="zoomOut">Zoom Out</button>
+    <button id="resetView">Reset View</button>
+  </div>
+
+  <div class="selection-info" id="selectionInfo">
+    <span>Selection: <span class="val" id="selStart">--</span>s - <span class="val" id="selEnd">--</span>s</span>
+    <span>Duration: <span class="val" id="selDuration">--</span>s</span>
+  </div>
+
+  <div class="save-section">
+    <label>Profile:</label>
+    <select id="profileSelect">
+      <option value="blue">Blue (Cherry MX Blue)</option>
+      <option value="red">Red (Cherry MX Red)</option>
+      <option value="brown">Brown (Cherry MX Brown)</option>
+    </select>
+    <label>Type:</label>
+    <select id="typeSelect">
+      <option value="down">Key Down</option>
+      <option value="up">Key Up</option>
+    </select>
+    <button class="primary" id="saveClip">Save Clip</button>
+  </div>
+
+  <div class="clips-list">
+    <h2>Saved Clips</h2>
+    <div id="clipsList"></div>
+  </div>
+
+  <div style="margin-top:20px;">
+    <button class="primary" id="applyClips" style="display:none;">Apply All Clips to App</button>
+  </div>
+
+  <script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let audioBuffer = null;
+    let sourceNode = null;
+
+    // Waveform view state
+    let viewStart = 0;
+    let viewEnd = 1;
+    let selStartNorm = null;
+    let selEndNorm = null;
+    let isDragging = false;
+    let dragStart = null;
+
+    const clips = [];
+
+    // Elements
+    const waveformCanvas = document.getElementById('waveform');
+    const rulerCanvas = document.getElementById('timeRuler');
+    const container = document.getElementById('waveformContainer');
+    const overlay = document.getElementById('selectionOverlay');
+
+    async function loadAudio() {
+      try {
+        const resp = await fetch('/audio/keyboard_sounds.wav');
+        if (!resp.ok) throw new Error('fetch failed: ' + resp.status);
+        const arrayBuf = await resp.arrayBuffer();
+        audioBuffer = await audioCtx.decodeAudioData(arrayBuf);
+      } catch (e) {
+        document.querySelector('#loadingOverlay .spinner').textContent =
+          'Error loading audio: ' + e.message + '. Make sure the server is running.';
+        return;
+      }
+      document.getElementById('loadingOverlay').style.display = 'none';
+      drawWaveform();
+      drawRuler();
+    }
+
+    function drawWaveform() {
+      if (!audioBuffer) return;
+      const dpr = window.devicePixelRatio || 1;
+      const rect = waveformCanvas.getBoundingClientRect();
+      waveformCanvas.width = rect.width * dpr;
+      waveformCanvas.height = rect.height * dpr;
+      const ctx = waveformCanvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      const w = rect.width;
+      const h = rect.height;
+      const data = audioBuffer.getChannelData(0);
+      const sr = audioBuffer.sampleRate;
+      const startSample = Math.floor(viewStart * data.length);
+      const endSample = Math.floor(viewEnd * data.length);
+      const samplesPerPixel = (endSample - startSample) / w;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Draw waveform
+      ctx.fillStyle = '#4A90D9';
+      const mid = h / 2;
+      for (let x = 0; x < w; x++) {
+        const s0 = Math.floor(startSample + x * samplesPerPixel);
+        const s1 = Math.floor(startSample + (x + 1) * samplesPerPixel);
+        let min = 0, max = 0;
+        for (let i = s0; i < s1 && i < data.length; i++) {
+          if (data[i] < min) min = data[i];
+          if (data[i] > max) max = data[i];
+        }
+        const yMin = mid + min * mid * 0.9;
+        const yMax = mid + max * mid * 0.9;
+        ctx.fillRect(x, yMax, 1, yMin - yMax || 1);
+      }
+
+      // Draw selection highlight
+      if (selStartNorm !== null && selEndNorm !== null) {
+        const sx = ((selStartNorm - viewStart) / (viewEnd - viewStart)) * w;
+        const ex = ((selEndNorm - viewStart) / (viewEnd - viewStart)) * w;
+        ctx.fillStyle = 'rgba(74, 144, 217, 0.2)';
+        ctx.fillRect(sx, 0, ex - sx, h);
+        ctx.strokeStyle = '#4A90D9';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(sx, 0);
+        ctx.lineTo(sx, h);
+        ctx.moveTo(ex, 0);
+        ctx.lineTo(ex, h);
+        ctx.stroke();
+      }
+    }
+
+    function drawRuler() {
+      if (!audioBuffer) return;
+      const dpr = window.devicePixelRatio || 1;
+      const rect = rulerCanvas.getBoundingClientRect();
+      rulerCanvas.width = rect.width * dpr;
+      rulerCanvas.height = rect.height * dpr;
+      const ctx = rulerCanvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      const w = rect.width;
+      const h = rect.height;
+      const duration = audioBuffer.duration;
+      const viewDuration = (viewEnd - viewStart) * duration;
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = '#666';
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'center';
+
+      // Calculate tick interval
+      const intervals = [0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 30, 60];
+      let tickInterval = 1;
+      for (const iv of intervals) {
+        if (viewDuration / iv < 30) { tickInterval = iv; break; }
+      }
+
+      const startSec = viewStart * duration;
+      const endSec = viewEnd * duration;
+      const firstTick = Math.ceil(startSec / tickInterval) * tickInterval;
+
+      for (let t = firstTick; t <= endSec; t += tickInterval) {
+        const x = ((t / duration - viewStart) / (viewEnd - viewStart)) * w;
+        ctx.fillStyle = '#555';
+        ctx.fillRect(x, 0, 1, 6);
+        ctx.fillStyle = '#888';
+        ctx.fillText(t.toFixed(tickInterval < 1 ? 2 : 0) + 's', x, 18);
+      }
+    }
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = (sec % 60).toFixed(3);
+      return m > 0 ? `${m}:${s.padStart(6, '0')}` : `${s}s`;
+    }
+
+    function updateSelectionUI() {
+      if (selStartNorm === null || selEndNorm === null) return;
+      const duration = audioBuffer.duration;
+      const startSec = Math.min(selStartNorm, selEndNorm) * duration;
+      const endSec = Math.max(selStartNorm, selEndNorm) * duration;
+      document.getElementById('selStart').textContent = startSec.toFixed(3);
+      document.getElementById('selEnd').textContent = endSec.toFixed(3);
+      document.getElementById('selDuration').textContent = (endSec - startSec).toFixed(3);
+    }
+
+    // Mouse interaction
+    container.addEventListener('mousedown', (e) => {
+      const rect = container.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const norm = viewStart + x * (viewEnd - viewStart);
+      isDragging = true;
+      dragStart = norm;
+      selStartNorm = norm;
+      selEndNorm = norm;
+      drawWaveform();
+      updateSelectionUI();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const rect = container.getBoundingClientRect();
+      const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      const norm = viewStart + x * (viewEnd - viewStart);
+      selStartNorm = Math.min(dragStart, norm);
+      selEndNorm = Math.max(dragStart, norm);
+      drawWaveform();
+      updateSelectionUI();
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+
+    // Scroll to zoom
+    container.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const rect = container.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const mouseNorm = viewStart + x * (viewEnd - viewStart);
+      const factor = e.deltaY > 0 ? 1.15 : 0.87;
+      let newRange = (viewEnd - viewStart) * factor;
+      newRange = Math.max(0.001, Math.min(1, newRange));
+      viewStart = mouseNorm - (mouseNorm - viewStart) / (viewEnd - viewStart) * newRange;
+      viewEnd = viewStart + newRange;
+      if (viewStart < 0) { viewEnd -= viewStart; viewStart = 0; }
+      if (viewEnd > 1) { viewStart -= (viewEnd - 1); viewEnd = 1; }
+      viewStart = Math.max(0, viewStart);
+      viewEnd = Math.min(1, viewEnd);
+      drawWaveform();
+      drawRuler();
+    });
+
+    // Playback
+    function playRegion(startNorm, endNorm) {
+      stopPlayback();
+      if (!audioBuffer) return;
+      sourceNode = audioCtx.createBufferSource();
+      sourceNode.buffer = audioBuffer;
+      sourceNode.connect(audioCtx.destination);
+      const startSec = startNorm * audioBuffer.duration;
+      const durSec = (endNorm - startNorm) * audioBuffer.duration;
+      sourceNode.start(0, startSec, durSec);
+      sourceNode.onended = () => { sourceNode = null; };
+    }
+
+    function stopPlayback() {
+      if (sourceNode) {
+        try { sourceNode.stop(); } catch(e) {}
+        sourceNode = null;
+      }
+    }
+
+    document.getElementById('playSelection').addEventListener('click', () => {
+      if (selStartNorm !== null && selEndNorm !== null) {
+        playRegion(Math.min(selStartNorm, selEndNorm), Math.max(selStartNorm, selEndNorm));
+      }
+    });
+
+    document.getElementById('stopPlay').addEventListener('click', stopPlayback);
+
+    document.getElementById('playAll').addEventListener('click', () => {
+      playRegion(viewStart, viewEnd);
+    });
+
+    document.getElementById('zoomIn').addEventListener('click', () => {
+      const mid = (viewStart + viewEnd) / 2;
+      const range = (viewEnd - viewStart) * 0.5;
+      viewStart = mid - range / 2;
+      viewEnd = mid + range / 2;
+      if (viewStart < 0) { viewEnd -= viewStart; viewStart = 0; }
+      if (viewEnd > 1) { viewStart -= (viewEnd - 1); viewEnd = 1; }
+      viewStart = Math.max(0, viewStart);
+      viewEnd = Math.min(1, viewEnd);
+      drawWaveform();
+      drawRuler();
+    });
+
+    document.getElementById('zoomOut').addEventListener('click', () => {
+      const mid = (viewStart + viewEnd) / 2;
+      const range = (viewEnd - viewStart) * 2;
+      viewStart = mid - range / 2;
+      viewEnd = mid + range / 2;
+      viewStart = Math.max(0, viewStart);
+      viewEnd = Math.min(1, viewEnd);
+      drawWaveform();
+      drawRuler();
+    });
+
+    document.getElementById('resetView').addEventListener('click', () => {
+      viewStart = 0;
+      viewEnd = 1;
+      drawWaveform();
+      drawRuler();
+    });
+
+    // Save clip
+    document.getElementById('saveClip').addEventListener('click', () => {
+      if (selStartNorm === null || selEndNorm === null) return;
+      const profile = document.getElementById('profileSelect').value;
+      const type = document.getElementById('typeSelect').value;
+      const startSec = Math.min(selStartNorm, selEndNorm) * audioBuffer.duration;
+      const endSec = Math.max(selStartNorm, selEndNorm) * audioBuffer.duration;
+
+      // Extract the audio segment as WAV
+      const sr = audioBuffer.sampleRate;
+      const startSample = Math.floor(startSec * sr);
+      const endSample = Math.min(Math.floor(endSec * sr), audioBuffer.length);
+      const length = endSample - startSample;
+      const channelData = audioBuffer.getChannelData(0).slice(startSample, endSample);
+
+      clips.push({ profile, type, startSec, endSec, channelData, sampleRate: sr });
+      renderClips();
+      document.getElementById('applyClips').style.display = 'inline-block';
+    });
+
+    function renderClips() {
+      const list = document.getElementById('clipsList');
+      list.innerHTML = '';
+      clips.forEach((clip, i) => {
+        const div = document.createElement('div');
+        div.className = 'clip-item';
+        const profileClass = `clip-${clip.profile}`;
+        div.innerHTML = `
+          <span class="clip-profile ${profileClass}">${clip.profile}</span>
+          <span class="clip-name">${clip.type === 'down' ? 'Key Down' : 'Key Up'}</span>
+          <span class="clip-time">${formatTime(clip.startSec)} - ${formatTime(clip.endSec)} (${(clip.endSec - clip.startSec).toFixed(3)}s)</span>
+          <button onclick="playClipPreview(${i})">Play</button>
+          <button onclick="removeClip(${i})">Remove</button>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    window.playClipPreview = function(i) {
+      const clip = clips[i];
+      const buf = audioCtx.createBuffer(1, clip.channelData.length, clip.sampleRate);
+      buf.getChannelData(0).set(clip.channelData);
+      stopPlayback();
+      sourceNode = audioCtx.createBufferSource();
+      sourceNode.buffer = buf;
+      sourceNode.connect(audioCtx.destination);
+      sourceNode.start();
+      sourceNode.onended = () => { sourceNode = null; };
+    };
+
+    window.removeClip = function(i) {
+      clips.splice(i, 1);
+      renderClips();
+      if (clips.length === 0) document.getElementById('applyClips').style.display = 'none';
+    };
+
+    // Apply clips - save as WAV files
+    document.getElementById('applyClips').addEventListener('click', () => {
+      // Group clips by profile
+      const profileData = {};
+      for (const clip of clips) {
+        if (!profileData[clip.profile]) profileData[clip.profile] = {};
+        profileData[clip.profile][clip.type] = {
+          channelData: clip.channelData,
+          sampleRate: clip.sampleRate
+        };
+      }
+
+      // For each profile, generate WAV data and save
+      for (const [profile, types] of Object.entries(profileData)) {
+        for (const [type, data] of Object.entries(types)) {
+          const wavBuffer = encodeWAV(data.channelData, data.sampleRate);
+          const blob = new Blob([wavBuffer], { type: 'audio/wav' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${profile}_${type}.wav`;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+      }
+
+      alert('WAV files downloaded! Move them to resources/sounds/{profile}/ directory.');
+    });
+
+    function encodeWAV(samples, sampleRate) {
+      const buffer = new ArrayBuffer(44 + samples.length * 2);
+      const view = new DataView(buffer);
+      const writeString = (offset, str) => {
+        for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+      };
+      writeString(0, 'RIFF');
+      view.setUint32(4, 36 + samples.length * 2, true);
+      writeString(8, 'WAVE');
+      writeString(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeString(36, 'data');
+      view.setUint32(40, samples.length * 2, true);
+      let offset = 44;
+      for (let i = 0; i < samples.length; i++) {
+        const s = Math.max(-1, Math.min(1, samples[i]));
+        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+        offset += 2;
+      }
+      return buffer;
+    }
+
+    // Handle resize
+    window.addEventListener('resize', () => {
+      drawWaveform();
+      drawRuler();
+    });
+
+    loadAudio();
+  </script>
+</body>
+</html>

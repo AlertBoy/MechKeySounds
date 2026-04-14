@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MechKeySounds</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Title bar -->
+    <div class="title-bar">
+      <div class="title-bar-text">
+        <span class="icon">⌨</span> MechKeySounds
+      </div>
+      <button class="close-btn" id="closeBtn">✕</button>
+    </div>
+
+    <!-- Enable toggle -->
+    <div class="section">
+      <div class="toggle-row">
+        <span class="label">Enable Sounds</span>
+        <label class="switch">
+          <input type="checkbox" id="enabledToggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Switch profile selector -->
+    <div class="section">
+      <span class="section-title">Switch Profile</span>
+      <div class="switch-profiles" id="switchProfiles">
+        <!-- Dynamically populated -->
+      </div>
+    </div>
+
+    <!-- Volume control -->
+    <div class="section">
+      <div class="slider-row">
+        <span class="label">Volume</span>
+        <span class="value" id="volumeValue">60%</span>
+      </div>
+      <input type="range" id="volumeSlider" min="0" max="100" value="60" class="range-slider">
+    </div>
+
+    <!-- Pitch variation -->
+    <div class="section">
+      <div class="slider-row">
+        <span class="label">Pitch Variation</span>
+        <span class="value" id="pitchValue">5%</span>
+      </div>
+      <input type="range" id="pitchSlider" min="0" max="20" value="5" class="range-slider">
+    </div>
+
+    <!-- Toggles -->
+    <div class="section toggles">
+      <div class="toggle-row">
+        <span class="label">Spatial Audio</span>
+        <label class="switch">
+          <input type="checkbox" id="spatialToggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span class="label">Mouse Sounds</span>
+        <label class="switch">
+          <input type="checkbox" id="mouseToggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Test buttons -->
+    <div class="section">
+      <span class="section-title">Test Sounds</span>
+      <div class="test-buttons">
+        <button class="test-btn" id="testDown">Key Down</button>
+        <button class="test-btn" id="testUp">Key Up</button>
+        <button class="test-btn" id="testMouse">Mouse Click</button>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div class="status" id="status">
+      Listening for keystrokes...
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

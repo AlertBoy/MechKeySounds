@@ -1,0 +1,22 @@
+appId: com.mechkeysounds.app
+productName: MechKeySounds
+directories:
+  output: dist
+files:
+  - main.js
+  - preload.js
+  - src/**/*
+  - resources/**/*
+  - package.json
+mac:
+  category: public.app-category.utilities
+  target:
+    - dmg
+    - zip
+win:
+  target:
+    - nsis
+linux:
+  target:
+    - AppImage
+  category: Utility
