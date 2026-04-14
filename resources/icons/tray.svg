@@ -1,21 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 22" width="22" height="22">
-  <!-- Keyboard body - clean rounded rect, hairline stroke -->
-  <rect x="1.5" y="4.5" width="19" height="13" rx="2.5" ry="2.5"
-        fill="none" stroke="#000" stroke-width="1.4"/>
-
-  <!-- Row 1: 5 keys -->
-  <rect x="3"   y="6.8" width="2.4" height="1.9" rx="0.45" fill="#000"/>
-  <rect x="6.4" y="6.8" width="2.4" height="1.9" rx="0.45" fill="#000"/>
-  <rect x="9.8" y="6.8" width="2.4" height="1.9" rx="0.45" fill="#000"/>
-  <rect x="13.2" y="6.8" width="2.4" height="1.9" rx="0.45" fill="#000"/>
-  <rect x="16.6" y="6.8" width="1.9" height="1.9" rx="0.45" fill="#000"/>
-
-  <!-- Row 2: 4 keys + tall enter -->
-  <rect x="3.5"  y="9.6" width="2.4" height="1.9" rx="0.45" fill="#000"/>
-  <rect x="6.9"  y="9.6" width="2.4" height="1.9" rx="0.45" fill="#000"/>
-  <rect x="10.3" y="9.6" width="2.4" height="1.9" rx="0.45" fill="#000"/>
-  <rect x="13.7" y="9.6" width="2.4" height="1.9" rx="0.45" fill="#000"/>
-
-  <!-- Spacebar -->
-  <rect x="5.5" y="12.6" width="11" height="1.8" rx="0.6" fill="#000"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" width="44" height="44">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#4a9ef0"/>
+      <stop offset="100%" stop-color="#1e4a8c"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="40" height="40" rx="9" ry="9" fill="url(#bg)"/>
+  <!-- Bold white M -->
+  <g fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 11 7 L 11 37"/>
+    <path d="M 33 7  L 33 37"/>
+    <path d="M 11 7  L 22 24.2"/>
+    <path d="M 33 7  L 22 24.2"/>
+  </g>
 </svg>

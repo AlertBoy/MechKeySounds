@@ -7,6 +7,9 @@
     "start": "electron .",
     "rebuild": "electron-rebuild",
     "build": "electron-builder",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux",
     "postinstall": "electron-rebuild"
   },
   "dependencies": {
@@ -19,15 +22,6 @@
   },
   "build": {
     "appId": "com.mechkeysounds.app",
-    "productName": "MechKeySounds",
-    "mac": {
-      "category": "public.app-category.utilities"
-    },
-    "linux": {
-      "target": "AppImage"
-    },
-    "win": {
-      "target": "nsis"
-    }
+    "productName": "MechKeySounds"
   }
 }

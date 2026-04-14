@@ -1,22 +1,52 @@
 appId: com.mechkeysounds.app
 productName: MechKeySounds
+copyright: Copyright © MechKeySounds
+
 directories:
   output: dist
+
+# Include app + production node_modules (do not replace defaults with only a few paths)
 files:
-  - main.js
-  - preload.js
-  - src/**/*
-  - resources/**/*
-  - package.json
+  - "**/*"
+  - "!dist{,/**}"
+  - "!scripts{,/**}"
+  - "!.github{,/**}"
+  - "!**/*.md"
+  - "!.gitignore"
+ - "!**/.DS_Store"
+
+asarUnpack:
+  - "**/*.node"
+
+# Upload installers to GitHub Releases when GH_TOKEN is set (e.g. in CI)
+publish:
+  provider: github
+  releaseType: release
+
 mac:
   category: public.app-category.utilities
   target:
-    - dmg
-    - zip
+    - target: dmg
+      arch:
+        - universal
+    - target: zip
+      arch:
+        - universal
+
 win:
   target:
-    - nsis
+    - target: nsis
+      arch:
+        - x64
+
 linux:
   target:
-    - AppImage
+    - target: AppImage
+      arch:
+        - x64
   category: Utility
+  maintainer: MechKeySounds
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true

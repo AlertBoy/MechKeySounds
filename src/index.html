@@ -11,15 +11,21 @@
     <!-- Title bar -->
     <div class="title-bar">
       <div class="title-bar-text">
-        <span class="icon">⌨</span> MechKeySounds
+        <span class="icon">&#x2328;</span> <span data-i18n="appTitle">MechKeySounds</span>
       </div>
-      <button class="close-btn" id="closeBtn">✕</button>
+      <div class="title-bar-actions">
+        <div class="lang-switch" id="langSwitch">
+          <button type="button" class="lang-btn active" data-lang="en" id="langEn">EN</button>
+          <button type="button" class="lang-btn" data-lang="zh" id="langZh">&#x4e2d;&#x6587;</button>
+        </div>
+        <button class="close-btn" id="closeBtn">&#x2715;</button>
+      </div>
     </div>
 
     <!-- Enable toggle -->
     <div class="section">
       <div class="toggle-row">
-        <span class="label">Enable Sounds</span>
+        <span class="label" data-i18n="enableSounds">Enable Sounds</span>
         <label class="switch">
           <input type="checkbox" id="enabledToggle" checked>
           <span class="slider"></span>
@@ -29,7 +35,7 @@
 
     <!-- Switch profile selector -->
     <div class="section">
-      <span class="section-title">Switch Profile</span>
+      <span class="section-title" data-i18n="switchProfile">Switch Profile</span>
       <div class="switch-profiles" id="switchProfiles">
         <!-- Dynamically populated -->
       </div>
@@ -38,7 +44,7 @@
     <!-- Volume control -->
     <div class="section">
       <div class="slider-row">
-        <span class="label">Volume</span>
+        <span class="label" data-i18n="volume">Volume</span>
         <span class="value" id="volumeValue">60%</span>
       </div>
       <input type="range" id="volumeSlider" min="0" max="100" value="60" class="range-slider">
@@ -47,7 +53,7 @@
     <!-- Pitch variation -->
     <div class="section">
       <div class="slider-row">
-        <span class="label">Pitch Variation</span>
+        <span class="label" data-i18n="pitchVariation">Pitch Variation</span>
         <span class="value" id="pitchValue">5%</span>
       </div>
       <input type="range" id="pitchSlider" min="0" max="20" value="5" class="range-slider">
@@ -56,14 +62,14 @@
     <!-- Toggles -->
     <div class="section toggles">
       <div class="toggle-row">
-        <span class="label">Spatial Audio</span>
+        <span class="label" data-i18n="spatialAudio">Spatial Audio</span>
         <label class="switch">
           <input type="checkbox" id="spatialToggle" checked>
           <span class="slider"></span>
         </label>
       </div>
       <div class="toggle-row">
-        <span class="label">Mouse Sounds</span>
+        <span class="label" data-i18n="mouseSounds">Mouse Sounds</span>
         <label class="switch">
           <input type="checkbox" id="mouseToggle" checked>
           <span class="slider"></span>
@@ -73,11 +79,11 @@
 
     <!-- Test buttons -->
     <div class="section">
-      <span class="section-title">Test Sounds</span>
+      <span class="section-title" data-i18n="testSounds">Test Sounds</span>
       <div class="test-buttons">
-        <button class="test-btn" id="testDown">Key Down</button>
-        <button class="test-btn" id="testUp">Key Up</button>
-        <button class="test-btn" id="testMouse">Mouse Click</button>
+        <button class="test-btn" id="testDown" data-i18n="keyDown">Key Down</button>
+        <button class="test-btn" id="testUp" data-i18n="keyUp">Key Up</button>
+        <button class="test-btn" id="testMouse" data-i18n="mouseClick">Mouse Click</button>
       </div>
     </div>
 
@@ -87,6 +93,7 @@
     </div>
   </div>
 
+  <script src="i18n.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>

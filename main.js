@@ -8,6 +8,37 @@ let mainWindow = null;
 let tray = null;
 let isEnabled = true;
 
+/** Tray menu + tooltip locale (synced from renderer preference) */
+let uiLocale = 'en';
+
+const TRAY_I18N = {
+  en: {
+    enabled: (on) => (on ? '\u2713 Enabled' : '\u2717 Disabled'),
+    showPanel: 'Show Panel',
+    quit: 'Quit MechKeySounds',
+    tooltip: 'MechKeySounds \u2014 mechanical key sounds',
+  },
+  zh: {
+    enabled: (on) => (on ? '\u2713 \u5df2\u542f\u7528' : '\u2717 \u5df2\u5173\u95ed'),
+    showPanel: '\u663e\u793a\u63a7\u5236\u9762\u677f',
+    quit: '\u9000\u51fa MechKeySounds',
+    tooltip: 'MechKeySounds \u2014 \u673a\u68b0\u952e\u76d8\u97f3\u6548',
+  },
+};
+
+function normalizeUiLocale(code) {
+  if (!code) return 'en';
+  return String(code).toLowerCase().startsWith('zh') ? 'zh' : 'en';
+}
+
+function applyTrayLocale(code) {
+  uiLocale = normalizeUiLocale(code);
+  const T = TRAY_I18N[uiLocale];
+  if (tray) {
+    tray.setToolTip(T.tooltip);
+  }
+}
+
 // Audio state
 let volume = 1.0;
 let mouseSoundsEnabled = true;
@@ -113,8 +144,7 @@ function createTrayIcon() {
     img = nativeImage.createEmpty();
   }
 
-  // Template image: macOS automatically inverts for light/dark menu bar
-  img.setTemplateImage(true);
+  // Full-colour icon (blue gradient + white "M"); do not use template mode
   return img;
 }
 
@@ -173,7 +203,7 @@ function toggleWindow() {
 function createTray() {
   const icon = createTrayIcon();
   tray = new Tray(icon);
-  tray.setToolTip('MechKeySounds');
+  tray.setToolTip(TRAY_I18N[uiLocale].tooltip);
 
   // macOS: setContextMenu overrides left-click and prevents 'click' event.
   // Left-click toggles the panel; right-click shows the context menu.
@@ -184,9 +214,10 @@ function createTray() {
 }
 
 function buildContextMenu() {
+  const T = TRAY_I18N[uiLocale];
   return Menu.buildFromTemplate([
     {
-      label: isEnabled ? '✓ Enabled' : '✗ Disabled',
+      label: T.enabled(isEnabled),
       click: () => {
         isEnabled = !isEnabled;
         if (mainWindow) {
@@ -196,12 +227,12 @@ function buildContextMenu() {
     },
     { type: 'separator' },
     {
-      label: 'Show Panel',
+      label: T.showPanel,
       click: toggleWindow
     },
     { type: 'separator' },
     {
-      label: 'Quit MechKeySounds',
+      label: T.quit,
       click: () => app.quit()
     }
   ]);
@@ -246,6 +277,10 @@ function setupHooks() {
 }
 
 // IPC handlers
+ipcMain.on('set-locale', (_event, lang) => {
+  applyTrayLocale(lang);
+});
+
 ipcMain.on('toggle-enabled', (_event, enabled) => {
   isEnabled = enabled;
 });
@@ -284,6 +319,8 @@ app.whenReady().then(() => {
   if (process.platform === 'darwin') {
     app.dock.hide();
   }
+
+  applyTrayLocale(app.getLocale());
 
   createWindow();
   createTray();

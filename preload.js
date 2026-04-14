@@ -25,4 +25,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   hideWindow: () => {
     ipcRenderer.send('hide-window');
   },
+  setLocale: (lang) => {
+    ipcRenderer.send('set-locale', lang);
+  },
 });
