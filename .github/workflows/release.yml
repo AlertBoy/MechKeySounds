@@ -46,7 +46,11 @@ jobs:
         if: matrix.platform == 'linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends rpm
+          sudo apt-get install -y --no-install-recommends \
+            rpm \
+            libx11-dev libxtst-dev libxkbcommon-dev \
+            libxkbcommon-x11-dev libxinerama-dev \
+            libwayland-dev libxrandr-dev
 
       - name: Install dependencies
         run: npm ci
