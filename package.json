@@ -1,6 +1,6 @@
 {
   "name": "mech-key-sounds",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Mechanical keyboard sounds for your computer - cross-platform",
   "main": "main.js",
   "scripts": {
