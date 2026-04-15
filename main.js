@@ -117,7 +117,7 @@ function getSoundPath(type, keycode) {
   return path.join(base, 'blue', 'blue_down.wav');
 }
 
-// Track concurrent afplay processes per slot to prevent stacking
+// Track concurrent player processes per slot to prevent stacking
 const players = {};
 
 function playSound(type, keycode = 0) {
@@ -131,11 +131,35 @@ function playSound(type, keycode = 0) {
     players[slot] = null;
   }
 
-  const proc = spawn('afplay', ['-v', String(volume), file]);
+  let proc;
+  if (process.platform === 'darwin') {
+    proc = spawn('afplay', ['-v', String(volume), file]);
+  } else if (process.platform === 'win32') {
+    // Use PowerShell MediaPlayer for WAV playback with volume control
+    const volPercent = Math.round(volume * 50); // map 0-2 range to 0-100
+    const psCmd = `
+      Add-Type -AssemblyName presentationCore
+      $player = New-Object System.Windows.Media.MediaPlayer
+      $player.Volume = ${volPercent / 100}
+      $player.Open('${file.replace(/'/g, "''")}')
+      Start-Sleep -Milliseconds 50
+      $player.Play()
+      Start-Sleep -Milliseconds 200
+      $player.Close()
+    `.trim();
+    proc = spawn('powershell', ['-NoProfile', '-Command', psCmd], { windowsHide: true });
+  } else {
+    // Linux: try aplay or paplay
+    proc = spawn('aplay', ['-q', file]);
+  }
+
   players[slot] = proc;
   const cleanup = () => { if (players[slot] === proc) players[slot] = null; };
   proc.on('close', cleanup);
-  proc.on('error', cleanup);
+  proc.on('error', (err) => {
+    console.error(`[Audio] Playback error on ${process.platform}:`, err.message);
+    cleanup();
+  });
 }
 
 function createTrayIcon() {
@@ -200,14 +224,31 @@ function toggleWindow() {
     mainWindow.hide();
   } else {
     // Position window near the tray
+    const { screen } = require('electron');
     const trayBounds = tray.getBounds();
-    mainWindow.setPosition(
-      Math.round(trayBounds.x + trayBounds.width / 2 - 170),
-      Math.round(trayBounds.y + trayBounds.height + 4)
-    );
+    const display = screen.getPrimaryDisplay();
+    const winW = 340;
+    const winH = 420;
+
+    console.log('[Main] trayBounds:', JSON.stringify(trayBounds));
+    console.log('[Main] display workArea:', JSON.stringify(display.workArea));
+
+    let x = Math.round(trayBounds.x + trayBounds.width / 2 - winW / 2);
+    let y = Math.round(trayBounds.y + trayBounds.height + 4);
+
+    // On Windows, tray is typically at bottom; position window above the tray
+    if (y + winH > display.workArea.y + display.workArea.height) {
+      y = Math.round(trayBounds.y - winH - 4);
+    }
+    // Clamp to work area
+    x = Math.max(display.workArea.x, Math.min(x, display.workArea.x + display.workArea.width - winW));
+    y = Math.max(display.workArea.y, Math.min(y, display.workArea.y + display.workArea.height - winH));
+
+    console.log('[Main] window position:', x, y);
+    mainWindow.setPosition(x, y);
     mainWindow.show();
     mainWindow.focus();
-    console.log('[Main] Window shown');
+    console.log('[Main] Window shown, isVisible:', mainWindow.isVisible());
   }
 }
 
